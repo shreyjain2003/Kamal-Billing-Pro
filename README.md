@@ -31,7 +31,8 @@
 
 ## 📸 Screenshots
 
-> _Coming soon_
+### 🧾 Create New Bill
+![Create New Bill](screenshots/new-bill.png)
 
 ---
 
