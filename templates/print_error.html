@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Printer Error – Kamal Billing Pro{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <h1>⚠️ {{ title }}</h1>
+  <p>The bill has been saved. You can retry printing without losing any data.</p>
+</div>
+
+<div class="alert alert-danger">
+  <span class="alert-icon">❌</span>
+  <div class="alert-body">
+    <strong>{{ title }}</strong>
+    {% if message %}<p style="margin-top:.35rem;">{{ message }}</p>{% endif %}
+  </div>
+</div>
+
+{% if bill_id %}
+<!-- Bill was saved — show receipt preview and retry -->
+<div class="receipt-card" style="margin-bottom: 1.25rem;">
+  <div class="receipt-header">
+    <h2>🏪 KAMAL CLOTH HOUSE</h2>
+    <p>Bill No. #{{ bill_id }} — Saved successfully, print failed</p>
+  </div>
+  {% if bill_text %}
+  <div class="receipt-body">
+    <pre class="receipt-pre">{{ bill_text }}</pre>
+  </div>
+  {% endif %}
+  <div class="receipt-actions">
+    <a href="/reprint/{{ bill_id }}" class="btn btn-primary btn-lg">
+      🔄 &nbsp;Try Printing Again
+    </a>
+    <a href="/" class="btn btn-outline">🧾 New Bill</a>
+    <a href="/history" class="btn btn-outline">📋 History</a>
+  </div>
+</div>
+
+{% else %}
+<!-- No bill_id — generic back buttons -->
+<div class="card">
+  <div class="card-body" style="display:flex; gap:.75rem; flex-wrap:wrap;">
+    <a href="{{ back_url }}" class="btn btn-primary">← {{ back_label }}</a>
+    <a href="/" class="btn btn-outline">🏠 Home</a>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}

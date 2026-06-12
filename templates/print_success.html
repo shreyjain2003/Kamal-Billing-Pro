@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Bill Printed – Kamal Billing Pro{% endblock %}
+{% block nav_home %}{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <h1>✅ Bill Printed Successfully</h1>
+  <p>The receipt has been sent to the printer.</p>
+</div>
+
+<div class="alert alert-success">
+  <span class="alert-icon">🖨️</span>
+  <div class="alert-body">
+    <strong>Print job sent!</strong>
+    Bill No. <strong>#{{ bill_id }}</strong> has been printed and saved.
+  </div>
+</div>
+
+<div class="receipt-card">
+  <div class="receipt-header">
+    <h2>🏪 KAMAL CLOTH HOUSE</h2>
+    <p>Receipt – Bill No. #{{ bill_id }}</p>
+  </div>
+  <div class="receipt-body">
+    <pre class="receipt-pre">{{ bill }}</pre>
+  </div>
+  <div class="receipt-actions">
+    <a href="/" class="btn btn-primary">🧾 New Bill</a>
+    <a href="/history" class="btn btn-outline">📋 View History</a>
+  </div>
+</div>
+
+{% endblock %}

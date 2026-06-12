@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block title %}New Bill – Kamal Billing Pro{% endblock %}
+{% block nav_home %}active{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <h1>🧾 Create New Bill</h1>
+  <p>Fill in customer details and add items to generate a receipt.</p>
+</div>
+
+<form action="/print" method="POST" id="billing-form">
+
+  <!-- Customer Details -->
+  <div class="card" style="margin-bottom: 1.25rem;">
+    <div class="card-header">
+      <h2>👤 Customer Details</h2>
+    </div>
+    <div class="card-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="customer">Customer Name</label>
+          <input
+            type="text"
+            id="customer"
+            name="customer"
+            placeholder="e.g. Rajesh Kumar"
+            required
+            autocomplete="off"
+          >
+        </div>
+        <div class="form-group">
+          <label for="mobile">Phone Number</label>
+          <input
+            type="text"
+            id="mobile"
+            name="mobile"
+            placeholder="10-digit mobile number"
+            maxlength="10"
+            pattern="[0-9]{10}"
+            title="Enter a valid 10-digit mobile number"
+            required
+            autocomplete="off"
+          >
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Items Table -->
+  <div class="card">
+    <div class="card-header">
+      <h2>📦 Items</h2>
+      <button type="button" class="btn btn-success btn-sm" onclick="addRow()">
+        ＋ Add Item
+      </button>
+    </div>
+    <div class="card-body" style="padding: 0;">
+      <div class="table-wrap" style="border: none; border-radius: 0;">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:40%">Item Description</th>
+              <th style="width:18%">Qty</th>
+              <th style="width:22%">Rate (₹)</th>
+              <th style="width:15%">Amount</th>
+              <th style="width:5%"></th>
+            </tr>
+          </thead>
+          <tbody id="items">
+            <tr>
+              <td><input type="text" name="item[]" placeholder="Item name" required></td>
+              <td><input type="number" name="qty[]" value="1" min="0" step="0.01" required oninput="calcRow(this)"></td>
+              <td><input type="number" name="rate[]" value="0" min="0" step="0.01" required oninput="calcRow(this)"></td>
+              <td class="row-amount" style="font-weight:600; color:#1a56db;">₹0</td>
+              <td><button type="button" class="btn-del" onclick="removeRow(this)" title="Remove row">✕</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Total strip -->
+    <div style="padding: .75rem 1.25rem 1.25rem;">
+      <div class="total-strip">
+        <span>Total Amount</span>
+        <span id="grand-total">₹0</span>
+      </div>
+    </div>
+
+    <!-- Action buttons -->
+    <div class="action-bar" style="padding: 0 1.25rem 1.5rem;">
+      <button type="button" class="btn btn-outline" onclick="addRow()">
+        ＋ Add Another Item
+      </button>
+      <button type="submit" class="btn btn-primary btn-lg">
+        🖨️ &nbsp;Print Bill
+      </button>
+    </div>
+  </div>
+
+</form>
+
+<script>
+  function calcRow(input) {
+    const row = input.closest('tr');
+    const qty = parseFloat(row.querySelector('[name="qty[]"]').value) || 0;
+    const rate = parseFloat(row.querySelector('[name="rate[]"]').value) || 0;
+    const amount = Math.ceil(qty * rate);
+    row.querySelector('.row-amount').textContent = '₹' + amount.toLocaleString('en-IN');
+    updateTotal();
+  }
+
+  function updateTotal() {
+    const amounts = document.querySelectorAll('.row-amount');
+    let total = 0;
+    amounts.forEach(el => {
+      total += parseInt(el.textContent.replace(/[₹,]/g, '')) || 0;
+    });
+    document.getElementById('grand-total').textContent = '₹' + total.toLocaleString('en-IN');
+  }
+
+  function addRow() {
+    const tbody = document.getElementById('items');
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td><input type="text" name="item[]" placeholder="Item name" required></td>
+      <td><input type="number" name="qty[]" value="1" min="0" step="0.01" required oninput="calcRow(this)"></td>
+      <td><input type="number" name="rate[]" value="0" min="0" step="0.01" required oninput="calcRow(this)"></td>
+      <td class="row-amount" style="font-weight:600; color:#1a56db;">₹0</td>
+      <td><button type="button" class="btn-del" onclick="removeRow(this)" title="Remove row">✕</button></td>
+    `;
+    tbody.appendChild(row);
+    row.querySelector('input[name="item[]"]').focus();
+  }
+
+  function removeRow(btn) {
+    const tbody = document.getElementById('items');
+    if (tbody.rows.length <= 1) return; // keep at least one row
+    btn.closest('tr').remove();
+    updateTotal();
+  }
+</script>
+
+{% endblock %}

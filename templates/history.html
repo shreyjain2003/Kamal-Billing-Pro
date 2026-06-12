@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% block title %}Bill History – Kamal Billing Pro{% endblock %}
+{% block nav_history %}active{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <h1>📋 Bill History</h1>
+  <p>All past bills sorted by most recent first.</p>
+</div>
+
+{% if bills %}
+<!-- Stats bar -->
+<div class="stats-bar">
+
+  <!-- Total Bills -->
+  <div class="stat-card">
+    <span class="stat-icon">🧾</span>
+    <span class="stat-label">Total Bills</span>
+    <span class="stat-value">{{ bills | length }}</span>
+  </div>
+
+  <!-- Daily Revenue (date picker, hidden until revealed) -->
+  <div class="stat-card" id="revenue-card" style="grid-column: span 2; cursor:default;">
+    <span class="stat-icon">💰</span>
+    <span class="stat-label">Daily Revenue</span>
+
+    <!-- Collapsed state -->
+    <div id="revenue-collapsed">
+      <button class="btn btn-outline btn-sm" onclick="openRevenue()" style="margin-top:.4rem;">
+        👁️ Check Revenue
+      </button>
+    </div>
+
+    <!-- Expanded state (hidden by default) -->
+    <div id="revenue-expanded" style="display:none; margin-top:.5rem;">
+      <div style="display:flex; align-items:center; gap:.6rem; flex-wrap:wrap;">
+        <input
+          type="date"
+          id="revenue-date"
+          class="revenue-date-input"
+          value="{{ today }}"
+          max="{{ today }}"
+          onchange="fetchRevenue()"
+        >
+        <button class="btn btn-primary btn-sm" onclick="fetchRevenue()">Go</button>
+        <button class="btn btn-outline btn-sm" onclick="closeRevenue()">✕</button>
+      </div>
+      <div id="revenue-result" style="margin-top:.65rem;">
+        <!-- filled by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Latest Bill -->
+  <div class="stat-card">
+    <span class="stat-icon">📅</span>
+    <span class="stat-label">Latest Bill</span>
+    <span class="stat-value" style="font-size:1rem; padding-top:.2rem;">{{ bills[0]['created_at'] }}</span>
+  </div>
+
+</div>
+{% endif %}
+
+<!-- Bill list -->
+{% if bills %}
+<div class="bill-list">
+  {% for bill in bills %}
+  <div class="bill-row">
+    <div class="bill-row-info">
+      <span class="bill-row-title">
+        #{{ bill['id'] }} &nbsp;–&nbsp; {{ bill['customer'] }}
+      </span>
+      <div class="bill-row-meta">
+        <span>📱 {{ bill['mobile'] }}</span>
+        <span>🗓️ {{ bill['created_at'] }}</span>
+      </div>
+    </div>
+    <div class="bill-row-actions">
+      <span class="bill-row-amount">₹{{ bill['total'] | int }}</span>
+      <a href="/reprint/{{ bill['id'] }}" class="btn btn-outline btn-sm">
+        🖨️ Reprint
+      </a>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% else %}
+<div class="card">
+  <div class="empty-state">
+    <div class="empty-icon">🧾</div>
+    <h3>No bills yet</h3>
+    <p>Create your first bill to see it here.</p>
+    <a href="/" class="btn btn-primary" style="margin-top:1rem;">Create a Bill</a>
+  </div>
+</div>
+{% endif %}
+
+<style>
+  .revenue-date-input {
+    padding: .42rem .75rem;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: .88rem;
+    color: var(--text);
+    background: #fff;
+    outline: none;
+    transition: var(--transition);
+  }
+  .revenue-date-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(26,86,219,.12);
+  }
+  .revenue-amount {
+    font-size: 1.55rem;
+    font-weight: 700;
+    color: var(--success-dark);
+  }
+  .revenue-meta {
+    font-size: .8rem;
+    color: var(--text-muted);
+    margin-top: .15rem;
+  }
+  .revenue-zero {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+</style>
+
+<script>
+  function openRevenue() {
+    document.getElementById('revenue-collapsed').style.display = 'none';
+    document.getElementById('revenue-expanded').style.display = 'block';
+    fetchRevenue(); // auto-load today's revenue on open
+  }
+
+  function closeRevenue() {
+    document.getElementById('revenue-expanded').style.display = 'none';
+    document.getElementById('revenue-collapsed').style.display = 'block';
+    document.getElementById('revenue-result').innerHTML = '';
+  }
+
+  function fetchRevenue() {
+    const date = document.getElementById('revenue-date').value;
+    if (!date) return;
+
+    const resultEl = document.getElementById('revenue-result');
+    resultEl.innerHTML = '<span style="color:var(--text-muted);font-size:.88rem;">Loading…</span>';
+
+    fetch('/revenue?date=' + encodeURIComponent(date))
+      .then(r => r.json())
+      .then(data => {
+        if (data.total > 0) {
+          resultEl.innerHTML = `
+            <div class="revenue-amount">₹${data.total.toLocaleString('en-IN')}</div>
+            <div class="revenue-meta">${data.count} bill${data.count !== 1 ? 's' : ''} on ${data.date_display}</div>
+          `;
+        } else {
+          resultEl.innerHTML = `
+            <div class="revenue-zero">₹0</div>
+            <div class="revenue-meta">No bills on ${data.date_display}</div>
+          `;
+        }
+      })
+      .catch(() => {
+        resultEl.innerHTML = '<span style="color:var(--danger);font-size:.88rem;">Failed to load. Try again.</span>';
+      });
+  }
+</script>
+
+{% endblock %}
