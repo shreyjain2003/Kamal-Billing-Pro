@@ -109,10 +109,11 @@ Kamal-Billing-Pro/
 ├── static/
 │   └── style.css       # Global stylesheet
 │
-├── receipts/           # (gitignored) Generated receipt files
-├── billing.db          # (gitignored) Local SQLite database
+├── .gitignore
 └── README.md
 ```
+
+> `billing.db` is auto-created on first run and is gitignored (local data only).
 
 ---
 
