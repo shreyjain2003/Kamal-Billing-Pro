@@ -5,7 +5,7 @@ import sqlite3
 from datetime import datetime
 from math import ceil
 
-from database import init_db
+from database import init_db, DB_PATH
 from printer import print_receipt
 
 init_db()
@@ -101,7 +101,7 @@ def print_bill():
     bill += "Visit Again\n\n"
 
     # SAVE BILL TO DATABASE
-    conn = sqlite3.connect("billing.db")
+    conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
     cur.execute(
         """
@@ -156,7 +156,7 @@ def print_bill():
 
 @app.route("/history")
 def history():
-    conn = sqlite3.connect("billing.db")
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
     cur.execute("SELECT * FROM bills ORDER BY id DESC")
@@ -187,7 +187,7 @@ def daily_revenue():
     except ValueError:
         return jsonify({"error": "invalid date"}), 400
 
-    conn = sqlite3.connect("billing.db")
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
     cur.execute(
@@ -208,7 +208,7 @@ def daily_revenue():
 
 @app.route("/reprint/<int:bill_id>")
 def reprint_bill(bill_id):
-    conn = sqlite3.connect("billing.db")
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
     cur.execute("SELECT bill_text FROM bills WHERE id = ?", (bill_id,))
