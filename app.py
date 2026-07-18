@@ -5,7 +5,7 @@ import sqlite3
 from datetime import datetime
 from math import ceil
 
-from database import init_db, DB_PATH
+from database import init_db, DB_PATH, renumber_bills
 from printer import print_receipt
 
 init_db()
@@ -104,15 +104,28 @@ def print_bill():
     # SAVE BILL TO DATABASE
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
+
+    # bill_no = next sequential display number
+    cur.execute("SELECT COALESCE(MAX(bill_no), 0) + 1 FROM bills")
+    bill_no = cur.fetchone()[0]
+
+    # Embed bill_no into the receipt text
+    bill_with_no = bill.replace(
+        "-" * RECEIPT_WIDTH + "\n" + f"{'Item':<10}",
+        f"Bill No : {bill_no}\n" + "-" * RECEIPT_WIDTH + "\n" + f"{'Item':<10}",
+        1
+    )
+
     cur.execute(
         """
-        INSERT INTO bills(customer, mobile, bill_text, total, created_at)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO bills(bill_no, customer, mobile, bill_text, total, created_at)
+        VALUES (?, ?, ?, ?, ?, ?)
         """,
         (
+            bill_no,
             customer,
             mobile,
-            bill,
+            bill_with_no,
             total,
             datetime.now().strftime("%d-%m-%Y %H:%M")
         )
@@ -121,16 +134,17 @@ def print_bill():
     conn.commit()
     conn.close()
 
-    print(f"Bill Saved Successfully. Bill No: {bill_id}")
+    print(f"Bill Saved Successfully. Bill No: {bill_no} (id={bill_id})")
 
     try:
-        success = asyncio.run(print_receipt(bill))
+        success = asyncio.run(print_receipt(bill_with_no))
 
         if success:
             return render_template(
                 "print_success.html",
                 bill_id=bill_id,
-                bill=bill
+                bill_no=bill_no,
+                bill=bill_with_no
             )
 
         return render_template(
@@ -138,7 +152,8 @@ def print_bill():
             title="Printer Not Found",
             message="Make sure the MPT-II printer is powered on and Bluetooth is enabled.",
             bill_id=bill_id,
-            bill_text=bill,
+            bill_no=bill_no,
+            bill_text=bill_with_no,
             back_url="/",
             back_label="Back to Billing"
         )
@@ -149,7 +164,8 @@ def print_bill():
             title="Printer Error",
             message=str(e),
             bill_id=bill_id,
-            bill_text=bill,
+            bill_no=bill_no,
+            bill_text=bill_with_no,
             back_url="/",
             back_label="Back to Billing"
         )
@@ -267,9 +283,11 @@ def delete_bill(bill_id):
     cur.execute("DELETE FROM bills WHERE id = ?", (bill_id,))
     affected = cur.rowcount
     conn.commit()
+    if affected:
+        renumber_bills(conn)  # reassign bill_no sequentially
+        print(f"Bill id={bill_id} deleted. Bills renumbered.")
     conn.close()
     if affected:
-        print(f"Bill #{bill_id} deleted.")
         return jsonify({"success": True})
     return jsonify({"success": False}), 404
 

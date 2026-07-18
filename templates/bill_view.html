@@ -5,7 +5,7 @@
 {% block content %}
 
 <div class="page-header">
-  <h1>🧾 Bill #{{ bill_id }}</h1>
+  <h1>🧾 Bill #{{ bill['bill_no'] }}</h1>
   <p>
     <strong>{{ bill['customer'] }}</strong>
     &nbsp;·&nbsp;
@@ -18,7 +18,7 @@
 <div class="receipt-card">
   <div class="receipt-header">
     <h2>🏪 KAMAL CLOTH HOUSE</h2>
-    <p>Bill No. #{{ bill_id }} &nbsp;·&nbsp; ₹{{ bill['total'] | int }}</p>
+    <p>Bill No. #{{ bill['bill_no'] }} &nbsp;·&nbsp; ₹{{ bill['total'] | int }}</p>
   </div>
   <div class="receipt-body">
     <pre class="receipt-pre">{{ bill['bill_text'] }}</pre>
@@ -32,7 +32,7 @@
     </a>
     <button
       class="btn btn-danger"
-      onclick="confirmDelete({{ bill_id }}, '{{ bill['customer'] }}')">
+      onclick="confirmDelete({{ bill_id }}, {{ bill['bill_no'] }}, '{{ bill['customer'] }}')">
       🗑️ Delete Bill
     </button>
   </div>
@@ -57,9 +57,9 @@
 </div>
 
 <script>
-  function confirmDelete(billId, customerName) {
+  function confirmDelete(billId, billNo, customerName) {
     document.getElementById('modal-customer').textContent = customerName;
-    document.getElementById('modal-bill-id').textContent = '#' + billId;
+    document.getElementById('modal-bill-id').textContent = '#' + billNo;
     document.getElementById('modal-confirm-btn').onclick = () => deleteBill(billId);
     document.getElementById('delete-modal').style.display = 'flex';
   }

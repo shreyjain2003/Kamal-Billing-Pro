@@ -83,7 +83,7 @@
        data-mobile="{{ bill['mobile'] }}">
     <div class="bill-row-info">
       <span class="bill-row-title">
-        #{{ bill['id'] }} &nbsp;–&nbsp; {{ bill['customer'] }}
+        #{{ bill['bill_no'] }} &nbsp;–&nbsp; {{ bill['customer'] }}
       </span>
       <div class="bill-row-meta">
         <span>📱 {{ bill['mobile'] }}</span>
@@ -100,7 +100,7 @@
       </a>
       <button
         class="btn btn-danger btn-sm"
-        onclick="confirmDelete({{ bill['id'] }}, '{{ bill['customer'] }}')"
+        onclick="confirmDelete({{ bill['id'] }}, {{ bill['bill_no'] }}, '{{ bill['customer'] }}')"
         title="Delete this bill">
         🗑️
       </button>
@@ -203,10 +203,10 @@
 
 <script>
   // ── Delete ────────────────────────────────────────────────
-  function confirmDelete(billId, customerName) {
+  function confirmDelete(billId, billNo, customerName) {
     document.getElementById('modal-customer').textContent = customerName;
-    document.getElementById('modal-bill-id').textContent = '#' + billId;
-    document.getElementById('modal-confirm-btn').onclick = () => deleteBill(billId);
+    document.getElementById('modal-bill-id').textContent = '#' + billNo;
+    document.getElementById('modal-confirm-btn').onclick = () => deleteBill(billId, billNo);
     document.getElementById('delete-modal').style.display = 'flex';
   }
 
@@ -214,22 +214,23 @@
     document.getElementById('delete-modal').style.display = 'none';
   }
 
-  function deleteBill(billId) {
+  function deleteBill(billId, billNo) {
     fetch('/bill/' + billId + '/delete', { method: 'POST' })
       .then(r => r.json())
       .then(data => {
         if (data.success) {
-          // Remove the row from DOM without page reload
           const rows = document.querySelectorAll('#bill-list .bill-row');
           rows.forEach(row => {
             if (row.querySelector('.bill-row-title') &&
-                row.querySelector('.bill-row-title').textContent.includes('#' + billId)) {
+                row.querySelector('.bill-row-title').textContent.includes('#' + billNo)) {
               row.style.transition = 'opacity .3s';
               row.style.opacity = '0';
-              setTimeout(() => row.remove(), 300);
+              setTimeout(() => { row.remove(); }, 300);
             }
           });
           closeModal();
+          // Reload after short delay so bill_no renumbering is reflected
+          setTimeout(() => location.reload(), 400);
         } else {
           alert('Failed to delete bill. Try again.');
           closeModal();
