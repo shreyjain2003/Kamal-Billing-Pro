@@ -30,7 +30,61 @@
     <a href="/history" class="btn btn-outline">
       ← Back to History
     </a>
+    <button
+      class="btn btn-danger"
+      onclick="confirmDelete({{ bill_id }}, '{{ bill['customer'] }}')">
+      🗑️ Delete Bill
+    </button>
   </div>
 </div>
+
+<!-- Delete Confirmation Modal -->
+<div id="delete-modal" class="modal-backdrop" style="display:none;">
+  <div class="modal-box">
+    <div class="modal-icon">🗑️</div>
+    <h3 class="modal-title">Delete Bill?</h3>
+    <p class="modal-body">
+      This will permanently delete bill
+      <strong id="modal-bill-id"></strong>
+      for <strong id="modal-customer"></strong>.
+      This cannot be undone.
+    </p>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="modal-confirm-btn">Yes, Delete</button>
+      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function confirmDelete(billId, customerName) {
+    document.getElementById('modal-customer').textContent = customerName;
+    document.getElementById('modal-bill-id').textContent = '#' + billId;
+    document.getElementById('modal-confirm-btn').onclick = () => deleteBill(billId);
+    document.getElementById('delete-modal').style.display = 'flex';
+  }
+
+  function closeModal() {
+    document.getElementById('delete-modal').style.display = 'none';
+  }
+
+  function deleteBill(billId) {
+    fetch('/bill/' + billId + '/delete', { method: 'POST' })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          window.location.href = '/history';
+        } else {
+          alert('Failed to delete bill. Try again.');
+          closeModal();
+        }
+      })
+      .catch(() => { alert('Error deleting bill.'); closeModal(); });
+  }
+
+  document.getElementById('delete-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+</script>
 
 {% endblock %}

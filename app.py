@@ -260,6 +260,20 @@ def view_bill(bill_id):
     return render_template("bill_view.html", bill_id=bill_id, bill=bill)
 
 
+@app.route("/bill/<int:bill_id>/delete", methods=["POST"])
+def delete_bill(bill_id):
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute("DELETE FROM bills WHERE id = ?", (bill_id,))
+    affected = cur.rowcount
+    conn.commit()
+    conn.close()
+    if affected:
+        print(f"Bill #{bill_id} deleted.")
+        return jsonify({"success": True})
+    return jsonify({"success": False}), 404
+
+
 @app.route("/reprint/<int:bill_id>")
 def reprint_bill(bill_id):
     conn = sqlite3.connect(DB_PATH)

@@ -98,6 +98,12 @@
       <a href="/reprint/{{ bill['id'] }}" class="btn btn-outline btn-sm">
         🖨️ Reprint
       </a>
+      <button
+        class="btn btn-danger btn-sm"
+        onclick="confirmDelete({{ bill['id'] }}, '{{ bill['customer'] }}')"
+        title="Delete this bill">
+        🗑️
+      </button>
     </div>
   </div>
   {% endfor %}
@@ -196,6 +202,47 @@
 </style>
 
 <script>
+  // ── Delete ────────────────────────────────────────────────
+  function confirmDelete(billId, customerName) {
+    document.getElementById('modal-customer').textContent = customerName;
+    document.getElementById('modal-bill-id').textContent = '#' + billId;
+    document.getElementById('modal-confirm-btn').onclick = () => deleteBill(billId);
+    document.getElementById('delete-modal').style.display = 'flex';
+  }
+
+  function closeModal() {
+    document.getElementById('delete-modal').style.display = 'none';
+  }
+
+  function deleteBill(billId) {
+    fetch('/bill/' + billId + '/delete', { method: 'POST' })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          // Remove the row from DOM without page reload
+          const rows = document.querySelectorAll('#bill-list .bill-row');
+          rows.forEach(row => {
+            if (row.querySelector('.bill-row-title') &&
+                row.querySelector('.bill-row-title').textContent.includes('#' + billId)) {
+              row.style.transition = 'opacity .3s';
+              row.style.opacity = '0';
+              setTimeout(() => row.remove(), 300);
+            }
+          });
+          closeModal();
+        } else {
+          alert('Failed to delete bill. Try again.');
+          closeModal();
+        }
+      })
+      .catch(() => { alert('Error deleting bill.'); closeModal(); });
+  }
+
+  // Close modal on backdrop click
+  document.getElementById('delete-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+
   // ── Search ────────────────────────────────────────────────
   function filterBills(query) {
     const q = query.trim().toLowerCase();
@@ -262,5 +309,23 @@
       });
   }
 </script>
+
+<!-- Delete Confirmation Modal -->
+<div id="delete-modal" class="modal-backdrop" style="display:none;">
+  <div class="modal-box">
+    <div class="modal-icon">🗑️</div>
+    <h3 class="modal-title">Delete Bill?</h3>
+    <p class="modal-body">
+      This will permanently delete bill
+      <strong id="modal-bill-id"></strong>
+      for <strong id="modal-customer"></strong>.
+      This cannot be undone.
+    </p>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="modal-confirm-btn">Yes, Delete</button>
+      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
 
 {% endblock %}
