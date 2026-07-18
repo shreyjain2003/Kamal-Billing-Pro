@@ -37,6 +37,7 @@ def format_inr(value):
 app.jinja_env.filters["format_inr"] = format_inr
 
 RECEIPT_WIDTH = 32
+SHOP_PHONE = "8218662687 / 9412378037"  # Shop contact numbers shown on every receipt
 
 
 def format_number(value):
@@ -76,9 +77,9 @@ def print_bill():
     bill = ""
     bill += "KAMAL CLOTH HOUSE".center(RECEIPT_WIDTH) + "\n"
     bill += "-" * RECEIPT_WIDTH + "\n"
+    bill += f"Ph : {SHOP_PHONE}\n"
     bill += f"Date : {datetime.now().strftime('%d-%m-%Y %I:%M %p')}\n"
     bill += f"Customer: {customer}\n\n"
-    bill += f"Mobile  : {mobile}\n\n"
 
     bill += f"{'Item':<10}{'Qty':>5}{'Rate':>7}{'Amount':>10}\n"
     bill += "-" * RECEIPT_WIDTH + "\n"
