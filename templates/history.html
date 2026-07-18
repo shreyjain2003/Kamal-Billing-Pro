@@ -92,6 +92,9 @@
     </div>
     <div class="bill-row-actions">
       <span class="bill-row-amount">₹{{ bill['total'] | int }}</span>
+      <a href="/bill/{{ bill['id'] }}" class="btn btn-primary btn-sm">
+        👁️ View
+      </a>
       <a href="/reprint/{{ bill['id'] }}" class="btn btn-outline btn-sm">
         🖨️ Reprint
       </a>

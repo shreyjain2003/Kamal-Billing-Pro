@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Bill #{{ bill_id }} – Kamal Billing Pro{% endblock %}
+{% block nav_history %}active{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <h1>🧾 Bill #{{ bill_id }}</h1>
+  <p>
+    <strong>{{ bill['customer'] }}</strong>
+    &nbsp;·&nbsp;
+    📱 {{ bill['mobile'] }}
+    &nbsp;·&nbsp;
+    🗓️ {{ bill['created_at'] }}
+  </p>
+</div>
+
+<div class="receipt-card">
+  <div class="receipt-header">
+    <h2>🏪 KAMAL CLOTH HOUSE</h2>
+    <p>Bill No. #{{ bill_id }} &nbsp;·&nbsp; ₹{{ bill['total'] | int }}</p>
+  </div>
+  <div class="receipt-body">
+    <pre class="receipt-pre">{{ bill['bill_text'] }}</pre>
+  </div>
+  <div class="receipt-actions">
+    <a href="/reprint/{{ bill_id }}" class="btn btn-primary">
+      🖨️ Print this Bill
+    </a>
+    <a href="/history" class="btn btn-outline">
+      ← Back to History
+    </a>
+  </div>
+</div>
+
+{% endblock %}

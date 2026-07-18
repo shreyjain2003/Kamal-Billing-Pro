@@ -239,6 +239,27 @@ def daily_revenue():
     })
 
 
+@app.route("/bill/<int:bill_id>")
+def view_bill(bill_id):
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM bills WHERE id = ?", (bill_id,))
+    bill = cur.fetchone()
+    conn.close()
+
+    if not bill:
+        return render_template(
+            "print_error.html",
+            title="Bill Not Found",
+            message=f"No bill found with ID #{bill_id}.",
+            back_url="/history",
+            back_label="Back to History"
+        ), 404
+
+    return render_template("bill_view.html", bill_id=bill_id, bill=bill)
+
+
 @app.route("/reprint/<int:bill_id>")
 def reprint_bill(bill_id):
     conn = sqlite3.connect(DB_PATH)
