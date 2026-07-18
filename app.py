@@ -203,6 +203,9 @@ def customers():
     rows = cur.fetchall()
     conn.close()
     return jsonify([{"customer": r["customer"], "mobile": r["mobile"]} for r in rows])
+
+
+@app.route("/revenue")
 def daily_revenue():
     date_str = request.args.get("date", "")
     if not date_str:
