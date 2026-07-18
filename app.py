@@ -173,7 +173,36 @@ def history():
     )
 
 
-@app.route("/revenue")
+@app.route("/customers")
+def customers():
+    """Return unique customers for autocomplete suggestions."""
+    q = request.args.get("q", "").strip()
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    if q:
+        cur.execute(
+            """
+            SELECT DISTINCT customer, mobile
+            FROM bills
+            WHERE customer LIKE ? OR mobile LIKE ?
+            ORDER BY customer ASC
+            LIMIT 10
+            """,
+            (f"%{q}%", f"%{q}%")
+        )
+    else:
+        cur.execute(
+            """
+            SELECT DISTINCT customer, mobile
+            FROM bills
+            ORDER BY id DESC
+            LIMIT 10
+            """
+        )
+    rows = cur.fetchall()
+    conn.close()
+    return jsonify([{"customer": r["customer"], "mobile": r["mobile"]} for r in rows])
 def daily_revenue():
     date_str = request.args.get("date", "")
     if not date_str:

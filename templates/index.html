@@ -18,7 +18,7 @@
     </div>
     <div class="card-body">
       <div class="form-row">
-        <div class="form-group">
+        <div class="form-group" style="position:relative;">
           <label for="customer">Customer Name</label>
           <input
             type="text"
@@ -27,9 +27,12 @@
             placeholder="e.g. Rajesh Kumar"
             required
             autocomplete="off"
+            oninput="fetchSuggestions(this.value)"
+            onfocus="fetchSuggestions(this.value)"
           >
+          <ul class="suggestion-list" id="name-suggestions"></ul>
         </div>
-        <div class="form-group">
+        <div class="form-group" style="position:relative;">
           <label for="mobile">Phone Number</label>
           <input
             type="text"
@@ -41,7 +44,10 @@
             title="Enter a valid 10-digit mobile number"
             required
             autocomplete="off"
+            oninput="fetchSuggestionsByMobile(this.value)"
+            onfocus="fetchSuggestionsByMobile(this.value)"
           >
+          <ul class="suggestion-list" id="mobile-suggestions"></ul>
         </div>
       </div>
     </div>
@@ -102,6 +108,73 @@
 </form>
 
 <script>
+  // ── Autocomplete ──────────────────────────────────────────
+  let acDebounce = null;
+
+  function fetchSuggestions(val) {
+    clearTimeout(acDebounce);
+    acDebounce = setTimeout(() => {
+      fetch('/customers?q=' + encodeURIComponent(val))
+        .then(r => r.json())
+        .then(data => showNameSuggestions(data));
+    }, 180);
+  }
+
+  function fetchSuggestionsByMobile(val) {
+    clearTimeout(acDebounce);
+    acDebounce = setTimeout(() => {
+      fetch('/customers?q=' + encodeURIComponent(val))
+        .then(r => r.json())
+        .then(data => showMobileSuggestions(data));
+    }, 180);
+  }
+
+  function showNameSuggestions(data) {
+    const list = document.getElementById('name-suggestions');
+    list.innerHTML = '';
+    if (!data.length) { list.style.display = 'none'; return; }
+    data.forEach(item => {
+      const li = document.createElement('li');
+      li.className = 'suggestion-item';
+      li.innerHTML = `<span class="sug-name">${item.customer}</span><span class="sug-mobile">${item.mobile}</span>`;
+      li.onmousedown = () => {
+        document.getElementById('customer').value = item.customer;
+        document.getElementById('mobile').value = item.mobile;
+        list.style.display = 'none';
+        document.getElementById('mobile-suggestions').style.display = 'none';
+      };
+      list.appendChild(li);
+    });
+    list.style.display = 'block';
+  }
+
+  function showMobileSuggestions(data) {
+    const list = document.getElementById('mobile-suggestions');
+    list.innerHTML = '';
+    if (!data.length) { list.style.display = 'none'; return; }
+    data.forEach(item => {
+      const li = document.createElement('li');
+      li.className = 'suggestion-item';
+      li.innerHTML = `<span class="sug-mobile">${item.mobile}</span><span class="sug-name">${item.customer}</span>`;
+      li.onmousedown = () => {
+        document.getElementById('customer').value = item.customer;
+        document.getElementById('mobile').value = item.mobile;
+        list.style.display = 'none';
+        document.getElementById('name-suggestions').style.display = 'none';
+      };
+      list.appendChild(li);
+    });
+    list.style.display = 'block';
+  }
+
+  // Close suggestions when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.form-group')) {
+      document.querySelectorAll('.suggestion-list').forEach(l => l.style.display = 'none');
+    }
+  });
+
+  // ── Billing table ─────────────────────────────────────────
   function calcRow(input) {
     const row = input.closest('tr');
     const qty = parseFloat(row.querySelector('[name="qty[]"]').value) || 0;
@@ -136,7 +209,7 @@
 
   function removeRow(btn) {
     const tbody = document.getElementById('items');
-    if (tbody.rows.length <= 1) return; // keep at least one row
+    if (tbody.rows.length <= 1) return;
     btn.closest('tr').remove();
     updateTotal();
   }

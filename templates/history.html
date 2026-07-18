@@ -64,9 +64,23 @@
 
 <!-- Bill list -->
 {% if bills %}
-<div class="bill-list">
+<div class="search-bar-wrap">
+  <input
+    type="text"
+    id="bill-search"
+    class="search-input"
+    placeholder="🔍  Search by customer name or phone number…"
+    oninput="filterBills(this.value)"
+    autocomplete="off"
+  >
+  <span id="search-count" class="search-count"></span>
+</div>
+
+<div class="bill-list" id="bill-list">
   {% for bill in bills %}
-  <div class="bill-row">
+  <div class="bill-row"
+       data-name="{{ bill['customer'] | lower }}"
+       data-mobile="{{ bill['mobile'] }}">
     <div class="bill-row-info">
       <span class="bill-row-title">
         #{{ bill['id'] }} &nbsp;–&nbsp; {{ bill['customer'] }}
@@ -86,6 +100,14 @@
   {% endfor %}
 </div>
 
+<div id="no-results" class="card" style="display:none;">
+  <div class="empty-state">
+    <div class="empty-icon">🔍</div>
+    <h3>No results found</h3>
+    <p>Try a different name or phone number.</p>
+  </div>
+</div>
+
 {% else %}
 <div class="card">
   <div class="empty-state">
@@ -98,6 +120,47 @@
 {% endif %}
 
 <style>
+  /* Search bar */
+  .search-bar-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    margin-bottom: 1rem;
+  }
+  .search-input {
+    width: 100%;
+    padding: .7rem 1.1rem;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    font-size: .95rem;
+    color: var(--text);
+    background: #fff;
+    outline: none;
+    transition: var(--transition);
+    box-shadow: var(--shadow-sm);
+  }
+  .search-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(26,86,219,.12);
+  }
+  .search-count {
+    white-space: nowrap;
+    font-size: .82rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    min-width: 60px;
+    text-align: right;
+  }
+  /* highlight matched text */
+  mark {
+    background: #fef08a;
+    color: inherit;
+    border-radius: 2px;
+    padding: 0 1px;
+  }
+
+  /* Revenue styles */
   .revenue-date-input {
     padding: .42rem .75rem;
     border: 1.5px solid var(--border);
@@ -130,10 +193,37 @@
 </style>
 
 <script>
+  // ── Search ────────────────────────────────────────────────
+  function filterBills(query) {
+    const q = query.trim().toLowerCase();
+    const rows = document.querySelectorAll('#bill-list .bill-row');
+    let visible = 0;
+
+    rows.forEach(row => {
+      const name   = row.dataset.name;
+      const mobile = row.dataset.mobile;
+      const match  = !q || name.includes(q) || mobile.includes(q);
+      row.style.display = match ? '' : 'none';
+      if (match) visible++;
+    });
+
+    // Show/hide no-results
+    document.getElementById('no-results').style.display = (visible === 0 && q) ? 'block' : 'none';
+
+    // Count label
+    const countEl = document.getElementById('search-count');
+    if (q) {
+      countEl.textContent = visible + ' result' + (visible !== 1 ? 's' : '');
+    } else {
+      countEl.textContent = '';
+    }
+  }
+
+  // ── Revenue ───────────────────────────────────────────────
   function openRevenue() {
     document.getElementById('revenue-collapsed').style.display = 'none';
     document.getElementById('revenue-expanded').style.display = 'block';
-    fetchRevenue(); // auto-load today's revenue on open
+    fetchRevenue();
   }
 
   function closeRevenue() {
